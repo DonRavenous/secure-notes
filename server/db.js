@@ -4,9 +4,9 @@ const path = require("path");
 //Keep DB file alongside the server code:
 const dbPath = path.join(__dirname, "app.db");
 // Create / open databese file
-const db = new Database("app.db");
+const db = new Database(dbPath);
 
-//Run a migration to ensure users table exists
+//User table
 db.prepare(
   `
     CREATE TABLE IF NOT EXISTS users (
@@ -18,12 +18,17 @@ db.prepare(
 `
 ).run();
 
-// Optional: quick sanity check
-const row = db
-  .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
-  .get();
-if (!row) {
-  console.error("Users table was not created!");
-}
+//Notes table (belongs to user.id)
+db.prepare(
+  `
+  CREATE TABLE IF NOT EXISTS notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )
+  `
+).run();
 
 module.exports = db;

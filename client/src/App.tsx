@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { login, register, getSecret } from "./lib/auth";
+import Notes from "./components/Notes";
 
 function App() {
   const { token, setToken } = useAuth();
@@ -76,9 +77,12 @@ function App() {
       </div>
 
       {token ? (
-        <p>
-          <strong>Token:</strong> {token.substring(0, 24)}...
-        </p>
+        <>
+          <p>
+            <strong>Token:</strong> {token.substring(0, 24)}...
+          </p>
+          <Notes />
+        </>
       ) : (
         <p>
           <strong>Token:</strong> (none)

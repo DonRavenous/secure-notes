@@ -11,6 +11,7 @@ Content-Type: application/json
 }
 
 ### Login
+# @name login
 POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
@@ -21,4 +22,17 @@ Content-Type: application/json
 
 ### Protected route (replace TOKEN with the real one from login)
 GET http://localhost:5000/api/secret
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzU1MzYyNDg1LCJleHAiOjE3NTUzNjYwODV9.WnECO1bKxWDFIRBkA_YqDPtjZpuaj5qD80eUl4CMlnI
+Authorization: Bearer {{login.response.body.token}}
+
+### List notes (needs token)
+GET http://localhost:5000/api/notes
+Authorization: Bearer {{login.response.body.token}}
+
+### Create note (needs token)
+POST http://localhost:5000/api/notes
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "content": "My first secure note!"
+}
