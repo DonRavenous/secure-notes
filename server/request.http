@@ -1,0 +1,24 @@
+### Health check
+GET http://localhost:5000/api/health
+
+### Register a new user
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "mypassword"
+}
+
+### Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "mypassword"
+}
+
+### Protected route (replace TOKEN with the real one from login)
+GET http://localhost:5000/api/secret
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzU1MzYyNDg1LCJleHAiOjE3NTUzNjYwODV9.WnECO1bKxWDFIRBkA_YqDPtjZpuaj5qD80eUl4CMlnI
