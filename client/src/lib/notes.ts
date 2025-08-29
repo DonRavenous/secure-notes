@@ -21,3 +21,23 @@ export async function createNote(token: string, content: string) {
     error?: string;
   }>;
 }
+
+export async function updateNote(token: string, id: number, content: string) {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notes/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+  return res.json();
+}
+
+export async function deleteNote(token: string, id: number) {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notes/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token} ` },
+  });
+  return res.status;
+}

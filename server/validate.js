@@ -39,4 +39,26 @@ const createNoteSchema = z.object({
   }),
 });
 
-module.exports = { validate, registerSchema, loginSchema, createNoteSchema };
+const noteIdParam = z.object({
+  params: z.object({
+    id: z.coerce.number().int().positive(), // coerce "123" -> 123 and validate
+  }),
+});
+
+const updateNoteSchema = z.object({
+  params: z.object({
+    id: z.coerce.number().int().positive(),
+  }),
+  body: z.object({
+    content: z.string().trim().min(1).max(2000),
+  }),
+});
+
+module.exports = {
+  validate,
+  registerSchema,
+  loginSchema,
+  createNoteSchema,
+  updateNoteSchema,
+  noteIdParam,
+};

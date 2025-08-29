@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { fetchNotes, createNote } from "../lib/notes";
+import { fetchNotes, createNote, updateNote, deleteNote } from "../lib/notes";
 
 type Note = { id: number; content: string; created_at: string };
 
@@ -9,6 +9,8 @@ export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<string>("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -69,15 +71,88 @@ export default function Notes() {
             key={n.id}
             style={{
               padding: 10,
-              border: " 1px solid #eee",
+              border: "1px solid #eee",
               borderRadius: 8,
               marginBottom: 8,
             }}
           >
-            <div style={{ whiteSpace: "pre-wrap" }}>{n.content}</div>
-            <div style={{ fontSize: 12, color: "#777", marginTop: 4 }}>
-              {new Date(n.created_at).toLocaleString()}
-            </div>
+            {editingId === n.id ? (
+              <>
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={3}
+                  style={{ width: "100%" }}
+                />
+                <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!token) return setStatus("Not logged in");
+                      const r = await updateNote(
+                        token,
+                        n.id,
+                        editContent.trim()
+                      );
+                      if (r.note) {
+                        setNotes((prev) =>
+                          prev.map((x) => (x.id === n.id ? r.note : x))
+                        );
+                        setEditingId(null);
+                        setEditContent("");
+                        setStatus("Updated!");
+                        setTimeout(() => setStatus(""), 800);
+                      } else {
+                        setStatus("Update failed");
+                      }
+                    }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(null);
+                      setEditContent("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ whiteSpace: "pre-wrap" }}>{n.content}</div>
+                <div style={{ fontSize: 12, color: "#777", marginTop: 4 }}>
+                  {new Date(n.created_at).toLocaleString()}
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(n.id);
+                      setEditContent(n.content);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!token) return setStatus("Not logged in");
+                      const code = await deleteNote(token, n.id);
+                      if (code === 204) {
+                        setNotes((prev) => prev.filter((x) => x.id !== n.id));
+                      } else {
+                        setStatus("Delete failed");
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </li>
         ))}
       </ul>

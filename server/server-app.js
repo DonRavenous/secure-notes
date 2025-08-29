@@ -89,6 +89,8 @@ const {
   registerSchema,
   loginSchema,
   createNoteSchema,
+  noteIdParam,
+  updateNoteSchema,
 } = require("./validate");
 
 //Register
@@ -172,6 +174,54 @@ app.post(
       .prepare("SELECT id, content, created_at FROM notes WHERE id = ?")
       .get(info.lastInsertRowid);
     res.status(201).json({ note: row });
+  }
+);
+
+//UPDATE note (only if it belongs to the user)
+app.put(
+  "/api/notes/:id",
+  authMiddleware,
+  validate(updateNoteSchema),
+  (req, res) => {
+    const { id } = req.params;
+    const { content } = req.body;
+    const stmt = db.prepare(
+      "UPDATE notes SET content = ? WHERE id = ? AND user_id = ?"
+    );
+    const result = stmt.run(content.trim(), id, req.user.id);
+
+    if (result.changes === 0) {
+      //not found or not owned by this user
+      return res.status(404).json({ error: "NotFound" });
+    }
+
+    const row = db
+      .prepare(
+        "SELECT id, content, created_at FROM notes WHERE id = ? AND user_id = ?"
+      )
+      .get(id, req.user.id);
+
+    res.json({ note: row });
+  }
+);
+
+//DELETE note (only if it belongs to the user)
+app.delete(
+  "/api/notes/:id",
+  authMiddleware,
+  validate(noteIdParam),
+  (req, res) => {
+    const { id } = req.params;
+
+    const result = db
+      .prepare("DELETE FROM notes WHERE id = ? AND user_id = ?")
+      .run(id, req.user.id);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: "NotFound" });
+    }
+
+    res.status(204).send(); //No Content
   }
 );
 
