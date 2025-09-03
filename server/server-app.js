@@ -239,6 +239,19 @@ app.get("/api/secret", (req, res) => {
   }
 });
 
+//Serve React build in production
+if (process.env.NODE_ENV === "production") {
+  const clientBuildPath = this.path.join(__dirname, "../client/dist");
+  app.use(express.static(clientBuildPath));
+
+  //For any route not starting with /api server index.html
+  app.get("*", (req, res) => {
+    if (!req.path.startsWith("/api")) {
+      res.sendFile(this.path.join(clientBuildPath, "index.html"));
+    }
+  });
+}
+
 //404
 app.use((req, res) => {
   res.status(404).json({ error: "NotFound", path: req.path });
