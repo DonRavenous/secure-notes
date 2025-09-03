@@ -8,9 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,23 +15,41 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "18" # use LTS; Azure runtimes are aligned here
+          node-version: "18"
           cache: "npm"
 
-      # Build the React client at the repo root
-      - name: Install root and build client
-        run: |
-          npm install
-          npm run build
+      # Install & build client
+      - name: Install client deps
+        working-directory: client
+        run: npm ci
 
-      # (Optional) quick sanity check that dist exists
-      - name: List client dist
+      - name: Build client
+        working-directory: client
+        run: npm run build
+
+      # Install server deps
+      - name: Install server deps
+        working-directory: server
+        run: npm ci
+
+      # Guard against old static path bug
+      - name: Guard server-app static path
+        run: |
+          if grep -R "this\.path\.join" -n server/server-app.js; then
+            echo "❌ Found 'this.path.join' in server/server-app.js"; exit 1
+          else
+            echo "OK ✓ server/server-app.js uses path.join"
+          fi
+
+      # Sanity: confirm built files exist
+      - name: Show client dist
         run: |
           ls -la client || true
           ls -la client/dist || true
+          sed -n '220,270p' server/server-app.js || true
 
-      # Create a lean artifact (exclude node_modules to reduce size)
-      - name: Prepare deployment artifact
+      # Prepare artifact without node_modules
+      - name: Prepare artifact
         run: |
           mkdir -p artifact
           rsync -a --exclude=node_modules ./ ./artifact/
@@ -69,6 +84,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: "Secure-Notes" # must match your App Service name exactly
+          app-name: "Secure-Notes"
           slot-name: "Production"
           package: .
