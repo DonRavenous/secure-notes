@@ -249,7 +249,7 @@ app.use(express.static(clientBuildPath));
 //For any route not starting with /api server index.html
 app.get(/^(?!\/api).*/, (req, res) => {
   if (!req.path.startsWith("/api")) {
-    res.sendFile(this.path.join(clientBuildPath, "index.html"));
+    res.sendFile(path.join(clientBuildPath, "index.html"));
   }
 });
 
