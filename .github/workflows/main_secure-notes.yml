@@ -1,4 +1,4 @@
-name: Build and deploy Node.js app to Azure Web App - Secure-Notes
+name: Build and deploy Secure-Notes to Azure
 
 on:
   push:
@@ -8,17 +8,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
 
-      # Install & build client
+      # ---- CLIENT ----
       - name: Install client deps
         working-directory: client
         run: npm ci
@@ -27,38 +28,47 @@ jobs:
         working-directory: client
         run: npm run build
 
-      # Install server deps
+      # ---- SERVER ----
       - name: Install server deps
         working-directory: server
         run: npm ci
 
-      # Guard against old static path bug
-      - name: Guard server-app static path
+      # ---- GUARDS / SANITY ----
+      - name: Guard static path bug
         run: |
           if grep -R "this\.path\.join" -n server/server-app.js; then
             echo "❌ Found 'this.path.join' in server/server-app.js"; exit 1
-          else
-            echo "OK ✓ server/server-app.js uses path.join"
           fi
+          echo "OK ✓ server-app.js uses path.join"
 
-      # Sanity: confirm built files exist
-      - name: Show client dist
+      - name: Ensure client/dist exists
         run: |
           ls -la client || true
           ls -la client/dist || true
-          sed -n '220,270p' server/server-app.js || true
+          test -f client/dist/index.html || (echo "❌ client/dist/index.html missing"; exit 1)
 
-      # Prepare artifact without node_modules
-      - name: Prepare artifact
+      # ---- PACKAGE ARTIFACT ----
+      - name: Prepare artifact (exclude node_modules)
         run: |
           mkdir -p artifact
-          rsync -a --exclude=node_modules ./ ./artifact/
+          rsync -a --delete --exclude=node_modules ./ ./artifact/
+
+      - name: Show artifact tree
+        run: |
+          ls -la artifact
+          ls -la artifact/client
+          ls -la artifact/client/dist
+
+      - name: Zip artifact for deploy
+        run: |
+          cd artifact
+          zip -r ../release.zip . -x "node_modules/*" "**/node_modules/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: artifact
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -81,9 +91,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_C15E056354D3418EB4E88889BB88E31D }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4E596E9B0FA4C35AD9A77E92D86D98B }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Azure Web App (ZIP)
         uses: azure/webapps-deploy@v3
         with:
-          app-name: "Secure-Notes"
+          app-name: "Secure-Notes" # must match your App Service name
           slot-name: "Production"
-          package: .
+          package: release.zip
