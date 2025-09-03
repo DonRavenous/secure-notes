@@ -1,6 +1,13 @@
 {
+  "name": "secure-notes",
+  "version": "1.0.0",
+  "private": true,
   "scripts": {
     "build": "cd client && npm install && npm run build",
-    "start": "cd server && npm install && node index.js"
+    "start": "cd server && npm install && node index.js",
+    "test": "echo \"(optional) run server tests here\""
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
