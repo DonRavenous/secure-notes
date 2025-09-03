@@ -6,6 +6,7 @@ const db = require("./db");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const pinoHttp = require("pino-http");
+const path = require("path");
 
 require("dotenv").config();
 
@@ -240,17 +241,17 @@ app.get("/api/secret", (req, res) => {
 });
 
 //Serve React build in production
-if (process.env.NODE_ENV === "production") {
-  const clientBuildPath = this.path.join(__dirname, "../client/dist");
-  app.use(express.static(clientBuildPath));
+const clientBuildPath = path.join(__dirname, "../client/dist");
+console.log("[STATIC] Serving from", clientBuildPath);
 
-  //For any route not starting with /api server index.html
-  app.get("*", (req, res) => {
-    if (!req.path.startsWith("/api")) {
-      res.sendFile(this.path.join(clientBuildPath, "index.html"));
-    }
-  });
-}
+app.use(express.static(clientBuildPath));
+
+//For any route not starting with /api server index.html
+app.get(/^(?!\/api).*/, (req, res) => {
+  if (!req.path.startsWith("/api")) {
+    res.sendFile(this.path.join(clientBuildPath, "index.html"));
+  }
+});
 
 //404
 app.use((req, res) => {
