@@ -24,7 +24,7 @@ jobs:
       # Build the React client at the repo root
       - name: Install root and build client
         run: |
-          npm ci
+          npm install
           npm run build
 
       # (Optional) quick sanity check that dist exists
