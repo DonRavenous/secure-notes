@@ -1,5 +1,7 @@
+const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
+
 export async function fetchNotes(token: string) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notes`, {
+  const res = await fetch(`${API_BASE}/notes`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.json() as Promise<{
@@ -8,7 +10,7 @@ export async function fetchNotes(token: string) {
 }
 
 export async function createNote(token: string, content: string) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notes`, {
+  const res = await fetch(`${API_BASE}/notes`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,7 +25,7 @@ export async function createNote(token: string, content: string) {
 }
 
 export async function updateNote(token: string, id: number, content: string) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notes/${id}`, {
+  const res = await fetch(`${API_BASE}/notes/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -35,7 +37,7 @@ export async function updateNote(token: string, id: number, content: string) {
 }
 
 export async function deleteNote(token: string, id: number) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notes/${id}`, {
+  const res = await fetch(`${API_BASE}/notes/${id}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token} ` },
   });
