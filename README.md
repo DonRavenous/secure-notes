@@ -1,5 +1,7 @@
 ﻿# Secure Notes Project
 
+![Build & Deploy](https://github.com/DonRavenous/secure-notes/actions/workflows/azure-deploy.yml/badge.svg)
+
 A full-stack demo app built as part of my cybersecurity & web dev learning roadmap.  
 Features secure authentication (JWT, bcrypt) and a React frontend connected to a Node/Express backend with SQLite.
 
@@ -12,6 +14,8 @@ Features secure authentication (JWT, bcrypt) and a React frontend connected to a
 - **Database:** SQLite (better-sqlite3)
 - **Auth:** bcrypt password hashing + JWT tokens
 - **Dev Tools:** REST Client (VS Code), GitHub
+- **Testing:** Vitest, Supertest
+- **Deployment:** Azure App Service (Linux, Node 18)
 
 ---
 
@@ -22,6 +26,8 @@ Features secure authentication (JWT, bcrypt) and a React frontend connected to a
 - Protected API routes
 - React frontend with login/register forms
 - Token persistence with localStorage
+- Notes CRUD (create, view, update, delete)
+- Secure headers & rate limiting
 - Ready for deployment to Azure / cloud platforms
 
 ---
@@ -46,6 +52,33 @@ GET /api/notes -> returns current user's notes (JWT required)
 POST /api/notes {content} -> creates a note owned by the current user (JWT required)
 
 The server derives the user from the **verified JWT**, not from the client body.
+
+---
+
+## 🚀 Deployment (Azure + GitHub Actions)
+
+### CI/CD Workflow
+
+- On push to `main`, GitHub Actions:
+  1. Installs client & server dependencies
+  2. Builds React app (`client/dist`)
+  3. Bundles app (excluding node_modules)
+  4. Deploys a ZIP to Azure App Service
+
+Workflow file: `.github/workflows/azure-deploy.yml`
+
+### Azure App Settings
+
+In **Azure Portal → App Service → Configuration → Application settings**:
+
+| Key                              | Value                                 |
+| -------------------------------- | ------------------------------------- |
+| `PORT`                           | `8080`                                |
+| `NODE_ENV`                       | `production`                          |
+| `JWT_SECRET`                     | strong random secret string           |
+| `FRONTEND_ORIGIN`                | `https://<yourapp>.azurewebsites.net` |
+| `SCM_DO_BUILD_DURING_DEPLOYMENT` | `false` (since CI builds client)      |
+| `WEBSITE_NODE_DEFAULT_VERSION`   | `~18`                                 |
 
 ---
 
@@ -151,6 +184,10 @@ VITE_API_URL=http://localhost:5000
 
 Vite only exposes vars prefixed with VITE\_.
 
+### client/.env.production
+
+VITE_API_URL=/api
+
 ### REST Client (VS Code)
 
 Create server/requests.http:
@@ -196,35 +233,17 @@ npm run dev – start Vite dev server
 
 npm run build – production build
 
-Troubleshooting
+### Troubleshooting
 
-CORS / Network errors
+CORS / Network errors → Ensure server CORS allows frontend origin; client .env must point to backend.
 
-Server CORS must allow http://localhost:5173.
+JWT 401 → Check Authorization: Bearer <token> header; ensure JWT_SECRET is set and stable.
 
-Client VITE_API_URL must point to your server port.
+SQLite schema didn’t change → Delete server/app.db and restart, or use SQLite CLI to drop/create tables.
 
-JWT 401
+TypeScript mismatches → Make sure Note type matches DB schema (id, content, created_at).
 
-Check Authorization: Bearer <token> header.
-
-Ensure JWT_SECRET is set and stable.
-
-SQLite schema didn’t change
-
-Dev tip: stop server, delete server/app.db, restart to recreate with new schema.
-
-Or use the SQLite CLI and run DROP TABLE ...; then CREATE TABLE ...;.
-
-TypeScript mismatches
-
-Frontend Note expects { id, content, created_at }. A typo like context will fail type-checking (by design—helps catch bugs).
-
-How I debugged SQLite table naming issues
-
-Why token persistence matters (localStorage vs cookies)
-
-What I learned about REST Client vs Postman
+Deployment fails → Check GitHub Action logs, ensure client/dist exists before deploy.
 
 Screenshots (TODO)
 
